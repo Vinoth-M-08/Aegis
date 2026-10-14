@@ -128,9 +128,10 @@ git clone https://github.com/Vinoth-M-08/aegis.git
 cd aegis
 
 cp .env.example .env          # add your provider keys
-docker compose up -d           # Redis, PostgreSQL + pgvector, Prometheus, Grafana
 ./mvnw spring-boot:run
 ```
+
+> Docker Compose (Redis, PostgreSQL + pgvector, Prometheus, Grafana) arrives with the budget and cache work. API-key auth is not enforced yet, so any bearer token is accepted for now.
 
 The gateway starts on `http://localhost:8080`.
 
@@ -171,6 +172,8 @@ X-Aegis-Provider: openai
 X-Aegis-Tokens-Remaining: 48210
 X-Aegis-Request-Id: 9f2c...
 ```
+
+Currently emitted: `X-Aegis-Provider` and `X-Aegis-Request-Id`. The others arrive with the cache and budget features.
 
 ---
 
@@ -257,10 +260,10 @@ Benchmarks will be published here once the k6 load-test suite is complete.
 
 ## Roadmap
 
-- [ ] OpenAI-compatible `/v1/chat/completions` endpoint
+- [x] OpenAI-compatible `/v1/chat/completions` endpoint (non-streaming)
 - [ ] API-key auth and tenant resolution
 - [ ] Redis Lua token budgets and rate limiting
-- [ ] Provider adapters (OpenAI, Azure OpenAI, Gemini)
+- [ ] Provider adapters (OpenAI ✅, Azure OpenAI, Gemini)
 - [ ] Circuit breakers and failover routing
 - [ ] Semantic cache with pgvector
 - [ ] PII redaction

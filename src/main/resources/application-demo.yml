@@ -1,0 +1,25 @@
+# Runs the whole gateway without any provider API keys:
+#   SPRING_PROFILES_ACTIVE=demo ./mvnw spring-boot:run
+# Two mock providers (the first fails 20% of the time, so failover is visible), local hashing
+# embeddings for the cache, a seeded demo tenant and a fixed admin token.
+aegis:
+  providers:
+    - name: mock-primary
+      type: mock
+      priority: 1
+      mock-latency: 400ms
+      mock-failure-rate: 0.2
+    - name: mock-fallback
+      type: mock
+      priority: 2
+      mock-latency: 700ms
+  resilience:
+    max-attempts: 1
+  cache:
+    similarity-threshold: 0.85
+    embedding:
+      type: hashing
+  admin:
+    token: ${AEGIS_ADMIN_TOKEN:demo-admin-token}
+  demo:
+    seed: true
