@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 10s
+
+scrape_configs:
+  # The gateway running on the host (./mvnw spring-boot:run) or in compose (--profile app).
+  # Whichever is not running shows as down; that is expected.
+  - job_name: aegis
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["host.docker.internal:8080", "aegis:8080"]

@@ -1,0 +1,92 @@
+spring:
+  application:
+    name: aegis
+  config:
+    # Lets local runs pick up keys and settings from .env (see .env.example)
+    import: optional:file:.env[.properties]
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/aegis}
+    username: ${DATABASE_USERNAME:aegis}
+    password: ${DATABASE_PASSWORD:aegis}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  port: ${PORT:8080}
+
+aegis:
+  providers:
+    - name: openai
+      type: openai
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
+      api-key: ${OPENAI_API_KEY:}
+      priority: 1
+      timeout: 20s
+    # Add more providers to enable failover, e.g.:
+    # - name: azure-openai
+    #   type: azure-openai
+    #   base-url: https://my-resource.openai.azure.com
+    #   api-key: ${AZURE_OPENAI_API_KEY:}
+    #   priority: 2
+    #   model-aliases: { gpt-4o-mini: my-gpt4o-mini-deployment }
+    # - name: gemini
+    #   type: openai            # Gemini's OpenAI-compatible endpoint
+    #   base-url: https://generativelanguage.googleapis.com/v1beta/openai
+    #   api-key: ${GEMINI_API_KEY:}
+    #   priority: 3
+    #   model-aliases: { gpt-4o-mini: gemini-2.0-flash }
+  resilience:
+    max-attempts: 2
+    initial-backoff: 200ms
+    failure-rate-threshold: 50
+    sliding-window-size: 20
+    minimum-number-of-calls: 5
+    open-state-duration: 30s
+  budgets:
+    default-daily-tokens: 100000
+    default-requests-per-minute: 60
+  cache:
+    enabled: true
+    similarity-threshold: 0.92
+    ttl: 24h
+    embedding:
+      type: ${AEGIS_EMBEDDING_TYPE:openai}
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
+      api-key: ${OPENAI_API_KEY:}
+      model: text-embedding-3-small
+  security:
+    pii-redaction: true
+    restore-pii: true
+    injection-guard: block   # block | flag | off (off disables it for every tenant)
+  admin:
+    token: ${AEGIS_ADMIN_TOKEN:}
+    cors-origins: ${AEGIS_ADMIN_CORS_ORIGINS:http://localhost:5173}
+  demo:
+    seed: ${AEGIS_DEMO_SEED:false}
+  # USD per 1M tokens. Check your provider's current price list; these are defaults to start from.
+  pricing:
+    gpt-4o-mini: { input-per-1m: 0.15, output-per-1m: 0.60 }
+    gpt-4o: { input-per-1m: 2.50, output-per-1m: 10.00 }
+    gpt-4.1-mini: { input-per-1m: 0.40, output-per-1m: 1.60 }
+    gpt-4.1: { input-per-1m: 2.00, output-per-1m: 8.00 }
+    gemini-2.0-flash: { input-per-1m: 0.10, output-per-1m: 0.40 }
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    tags:
+      application: aegis
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING:1.0}
+  otlp:
+    tracing:
+      # Set to e.g. http://localhost:4318/v1/traces (Jaeger in docker-compose) to export traces
+      endpoint: ${OTEL_TRACES_ENDPOINT:}
